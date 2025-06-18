@@ -1,0 +1,70 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-monitoring
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.external-url=http://180.149.196.68/prometheus/'
+      - '--web.route-prefix=/prometheus/'
+    restart: always
+    networks:
+      - traefik
+      - monitoring
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.prometheus.rule=Host(`180.149.196.68`) && PathPrefix(`/prometheus`)'
+      - 'traefik.http.routers.prometheus.entrypoints=web'
+      - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
+      # Middleware pour retirer le préfixe /prometheus avant de transmettre à Prometheus
+      - 'traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus'
+      - 'traefik.http.routers.prometheus.middlewares=prometheus-stripprefix'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-monitoring
+    environment:
+      # Configuration sécurisée pour la production
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-ChangeMe2024!}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://180.149.196.68/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+      # Sécurité renforcée
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_SECURITY_COOKIE_SECURE=false
+      - GF_SECURITY_COOKIE_SAMESITE=lax
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    restart: always
+    networks:
+      - traefik
+      - monitoring
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.grafana.rule=Host(`180.149.196.68`) && PathPrefix(`/grafana`)'
+      - 'traefik.http.routers.grafana.entrypoints=web'
+      - 'traefik.http.services.grafana.loadbalancer.server.port=3000'
+
+networks:
+  traefik:
+    external: true
+  monitoring:
+    driver: bridge
+
+volumes:
+  grafana-data:
+  prometheus-data:
