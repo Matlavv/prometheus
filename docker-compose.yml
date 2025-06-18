@@ -23,9 +23,6 @@ services:
       - 'traefik.http.routers.prometheus.rule=Host(`180.149.196.68`) && PathPrefix(`/prometheus`)'
       - 'traefik.http.routers.prometheus.entrypoints=web'
       - 'traefik.http.services.prometheus.loadbalancer.server.port=9090'
-      # Middleware pour retirer le préfixe /prometheus avant de transmettre à Prometheus
-      - 'traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus'
-      - 'traefik.http.routers.prometheus.middlewares=prometheus-stripprefix'
 
   grafana:
     image: grafana/grafana:latest
@@ -33,7 +30,7 @@ services:
     environment:
       # Configuration sécurisée pour la production
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-ChangeMe2024!}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-ChangeMe2025!}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=http://180.149.196.68/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
