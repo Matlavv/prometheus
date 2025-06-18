@@ -8,13 +8,13 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'backend-p10'
-    scrape_interval: 30s
-    metrics_path: '/metrics'
+  - job_name: 'p10-backend'
+    scrape_interval: 30s 
+    metrics_path: '/p10-app/api/metrics'  
     static_configs:
-      - targets: ['180.149.196.68:3001']
-    scrape_timeout: 10s
+      - targets: ['180.149.196.68']  
+    scrape_timeout: 10s  
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'p10-backend'
+        replacement: 'p10-app-traefik'
